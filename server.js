@@ -1,32 +1,16 @@
-const express = require('express');
-const { createServer } = require('http');
-const { Server } = require('socket.io');
-
-const app = express();
-const httpServer = createServer(app);
-const io = new Server(httpServer, {
-  cors: {
-    origin: "*",
-    methods: ["GET", "POST"]
-  }
-});
-
-const path = require('path');
-app.use(express.static(path.join(__dirname, 'public')));
-
-let onlineUsers = new Set();
+const users = {};
 
 io.on('connection', (socket) => {
-  // Add new user
-  onlineUsers.add(socket.id);
-  updateOnlineCount();
+  // Listen for the username sent by the client
+  socket.on('user_connected', (username) => {
+    users[socket.id] = username;
+    io.emit('online-users', Object.values(users).length);
+  });
 
-  // Message handling
+  // Message handling (keep as is)
   socket.on('message', (message) => {
     message.status = 'delivered';
-    // Broadcast to all except sender
     socket.broadcast.emit('message', message);
-    // Optionally, acknowledge to sender (for status update)
     socket.emit('message-status', message.id, 'delivered');
   });
 
@@ -66,19 +50,12 @@ io.on('connection', (socket) => {
 
   // User disconnect
   socket.on('disconnect', () => {
-    onlineUsers.delete(socket.id);
-    updateOnlineCount();
-    // Optionally, broadcast user disconnect event if you track usernames
-    // io.emit('user-disconnect', username);
+    delete users[socket.id];
+    io.emit('online-users', Object.values(users).length);
   });
-
-  function updateOnlineCount() {
-    io.emit('online-users', onlineUsers.size);
-  }
 });
 
 const PORT = process.env.PORT || 3000;
 httpServer.listen(PORT, () => {
   console.log('Server running on port', PORT);
 });
-

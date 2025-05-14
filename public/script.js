@@ -77,6 +77,15 @@ document.addEventListener('DOMContentLoaded', function() {
   const fileInput = document.getElementById("file-input");
   const fileBtn = document.getElementById("file-btn");
 
+  // ---- ONLINE USER COUNT LOGIC ----
+  // Send username to server after connecting
+  socket.emit('user_connected', username);
+
+  // Listen for online user count updates
+  socket.on('online-users', (count) => {
+    document.getElementById('online-counter').textContent = count + ' online';
+  });
+
   // File upload
   fileBtn.addEventListener("click", () => fileInput.click());
   fileInput.addEventListener("change", () => {
