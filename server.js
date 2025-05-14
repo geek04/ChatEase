@@ -1,4 +1,4 @@
-const users = {};
+
 
 const express = require('express');
 const { createServer } = require('http');
@@ -14,8 +14,9 @@ const io = new Server(httpServer, {
   }
 });
 
+app.use(express.static(path.join(__dirname, 'public')));
 
-
+const users = {};
 io.on('connection', (socket) => {
   // Listen for the username sent by the client
   socket.on('user_connected', (username) => {
