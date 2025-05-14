@@ -11,6 +11,9 @@ const io = new Server(httpServer, {
   }
 });
 
+const path = require('path');
+app.use(express.static(path.join(__dirname, 'public')));
+
 let onlineUsers = new Set();
 
 io.on('connection', (socket) => {
