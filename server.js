@@ -1,5 +1,21 @@
 const users = {};
 
+const express = require('express');
+const { createServer } = require('http');
+const { Server } = require('socket.io');
+const path = require('path');
+
+const app = express();
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
+});
+
+
+
 io.on('connection', (socket) => {
   // Listen for the username sent by the client
   socket.on('user_connected', (username) => {
