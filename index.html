@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ChatEase Pro</title>
   <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/woody180/vanilla-javascript-emoji-picker@main/FGEmojiPicker.css">
+  <!-- No emoji-picker element or script here! -->
 </head>
 <body>
   <div class="sidebar">
@@ -79,7 +79,7 @@
     </form>
   </div>
 
-  <!-- Overlays and Modals -->
+  <!-- Overlays and Modals (unchanged) -->
   <div class="notification" id="notification" aria-modal="true" role="alertdialog" tabindex="-1" hidden>
     <p id="notification-message"></p>
     <button id="notification-close">Close</button>
@@ -141,9 +141,24 @@
     <button id="unblock-btn">Unblock</button>
     <button id="unmute-btn">Unmute</button>
   </div>
-  <!-- Only use the third-party emoji picker, not a custom one -->
+  <!-- Custom context menu for messages -->
+<div id="message-context-menu" class="context-menu" style="display:none; position:absolute; z-index:9999;">
+  <ul>
+    <li id="context-archive">Archive</li>
+    <li id="context-forward">Forward</li>
+    <li id="context-copy">Copy</li>
+    <li id="context-delete">Delete</li>
+    <li id="context-edit">Edit</li>
+  </ul>
+</div>
+
+
+  <!-- Place the emoji-picker element here, just before scripts -->
+  <emoji-picker id="emoji-picker" style="display:none; position:absolute; z-index:9999;"></emoji-picker>
+
+  <!-- Scripts at the end of body, correct order, no duplicates -->
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/gh/woody180/vanilla-javascript-emoji-picker@main/FGEmojiPicker.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1.26.3/index.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
