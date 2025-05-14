@@ -1,154 +1,143 @@
-// script.js
+// Initialize Socket.IO connection
+const socket = io('http://localhost:3000');
 
-// ==== User Authentication ====
-let username = localStorage.getItem('chat-username');
-if (!username) {
-  username = prompt('Enter your username:');
-  localStorage.setItem('chat-username', username || 'You');
-}
-document.getElementById('user-info').textContent = username;
+// UI Elements
+const chatForm = document.getElementById('chat-form');
+const chatInput = document.getElementById('chat-input');
+const chatMessages = document.getElementById('chat-messages');
+const welcomeScreen = document.getElementById('welcome-screen');
+const themeToggle = document.getElementById('theme-toggle');
+const emojiBtn = document.getElementById('emoji-btn');
+const fileBtn = document.getElementById('file-btn');
+const fileInput = document.getElementById('file-input');
 
-// ==== Theme Toggle ====
-const themeBtn = document.getElementById('toggle-theme');
-themeBtn.onclick = () => {
-  document.body.classList.toggle('dark');
-  themeBtn.textContent = document.body.classList.contains('dark') ? '☀️' : '🌙';
-};
-
-// ==== Chat Elements ====
-const form = document.getElementById('chat-form');
-const input = document.getElementById('chat-input');
-const chatBox = document.getElementById('chat-box');
-const typingIndicator = document.getElementById('typing-indicator');
-
-// ==== Persistent Chat ====
-let messages = JSON.parse(localStorage.getItem('chat-messages') || '[]');
-messages.forEach(msg => addMessage(msg, false));
-
-// ==== Typing Indicator ====
-let typingTimeout;
-input.addEventListener('input', () => {
-  showTypingIndicator();
-  clearTimeout(typingTimeout);
-  typingTimeout = setTimeout(hideTypingIndicator, 700);
+// Emoji Picker (third-party only)
+new EmojiPicker({
+  trigger: [{ selector: '#emoji-btn', insertInto: '#chat-input' }],
+  closeButton: true,
+  fadeTimeout: 200
 });
 
-function showTypingIndicator() {
-  typingIndicator.textContent = 'You are typing...';
-}
-function hideTypingIndicator() {
-  typingIndicator.textContent = '';
-}
+// Theme Management
+themeToggle.addEventListener('click', () => {
+  document.body.toggleAttribute('data-theme');
+  themeToggle.textContent = document.body.hasAttribute('data-theme') ? '☀️' : '🌙';
+});
 
-// ==== Message Sending ====
-form.addEventListener('submit', function (e) {
+// File Upload Handling
+fileBtn.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) {
+    showNotification('File size exceeds 5MB limit');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = () => {
+    socket.emit('file-upload', {
+      name: file.name,
+      type: file.type,
+      data: reader.result,
+      sender: localStorage.getItem('username')
+    });
+  };
+  reader.readAsDataURL(file);
+});
+
+// Message Handling
+chatForm.addEventListener('submit', (e) => {
   e.preventDefault();
-  const msg = input.value.trim();
-  if (msg === '') return;
-  const messageObj = {
-    user: username,
-    type: 'sent',
-    text: msg,
-    time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-    avatar: 'https://api.dicebear.com/7.x/identicon/svg?seed=' + encodeURIComponent(username)
+  const message = chatInput.value.trim();
+  if (!message) return;
+  const messageData = {
+    id: Date.now(),
+    content: message,
+    sender: localStorage.getItem('username'),
+    timestamp: new Date().toISOString(),
+    status: 'sent'
   };
-  addMessage(messageObj, true);
-
-  // Simulate typing...
-  setTimeout(() => {
-    showTypingIndicator();
-    setTimeout(() => {
-      hideTypingIndicator();
-      const replyObj = generateReply();
-      addMessage(replyObj, true);
-    }, 900);
-  }, 400);
-
-  input.value = '';
+  socket.emit('message', messageData);
+  chatInput.value = '';
+  welcomeScreen.style.display = 'none';
 });
 
-// ==== Add Message to UI and Storage ====
-function addMessage(msgObj, save = true) {
-  const msgDiv = document.createElement('div');
-  msgDiv.classList.add('message', msgObj.type);
-
-  // Avatar
-  const avatar = document.createElement('img');
-  avatar.className = 'avatar';
-  avatar.src = msgObj.avatar;
-  avatar.alt = msgObj.user;
-
-  // Content
-  const content = document.createElement('div');
-  content.className = 'content';
-  content.innerHTML = parseMessage(msgObj.text);
-
-  // Timestamp
-  const ts = document.createElement('span');
-  ts.className = 'timestamp';
-  ts.textContent = msgObj.time;
-
-  // User name for received
-  if (msgObj.type === 'received') {
-    const uname = document.createElement('span');
-    uname.style.fontWeight = 'bold';
-    uname.style.marginRight = '0.5em';
-    uname.textContent = msgObj.user;
-    content.prepend(uname);
+// Socket Event Listeners
+socket.on('connect', () => {
+  if (!localStorage.getItem('username')) {
+    const username = prompt('Enter your username:') || 'Anonymous';
+    localStorage.setItem('username', username);
   }
+  document.getElementById('username-display').textContent = localStorage.getItem('username');
+});
 
-  msgDiv.appendChild(avatar);
-  msgDiv.appendChild(content);
-  msgDiv.appendChild(ts);
+socket.on('message', (message) => {
+  appendMessage(message);
+  welcomeScreen.style.display = 'none';
+});
 
-  chatBox.appendChild(msgDiv);
-  chatBox.scrollTop = chatBox.scrollHeight;
+socket.on('user-typing', (username) => {
+  const typingIndicator = document.getElementById('typing-indicator');
+  typingIndicator.textContent = `${username} is typing...`;
+  setTimeout(() => { typingIndicator.textContent = ''; }, 2000);
+});
 
-  if (save) {
-    messages.push(msgObj);
-    localStorage.setItem('chat-messages', JSON.stringify(messages));
-  }
+socket.on('online-users', (count) => {
+  document.getElementById('online-counter').textContent = `${count} online`;
+});
+
+socket.on('file-upload', (fileData) => {
+  const fileElement = document.createElement('div');
+  fileElement.className = 'file-message';
+  fileElement.innerHTML = `
+    <img src="https://api.dicebear.com/7.x/identicon/svg?seed=${fileData.sender}" class="avatar" alt="${fileData.sender}'s avatar">
+    <div class="file-content">
+      <span class="sender">${fileData.sender}</span>
+      <a href="${fileData.data}" download="${fileData.name}">${fileData.name}</a>
+    </div>
+  `;
+  chatMessages.appendChild(fileElement);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+});
+
+// Typing indication
+chatInput.addEventListener('input', () => {
+  socket.emit('user-typing', localStorage.getItem('username'));
+});
+
+// Helper Functions
+function appendMessage(message) {
+  const messageElement = document.createElement('div');
+  messageElement.className = `message ${message.sender === localStorage.getItem('username') ? 'sent' : 'received'}`;
+  messageElement.dataset.id = message.id;
+  messageElement.dataset.timestamp = message.timestamp;
+  messageElement.innerHTML = `
+    <img src="https://api.dicebear.com/7.x/identicon/svg?seed=${message.sender}" class="avatar" alt="${message.sender}'s avatar">
+    <div class="message-content">
+      <div class="message-header">
+        <span class="sender">${message.sender}</span>
+        <span class="timestamp">${new Date(message.timestamp).toLocaleTimeString()}</span>
+      </div>
+      <div class="message-body">${parseMessageContent(message.content)}</div>
+      <div class="message-status">${message.status === 'sent' ? '✓' : '✓✓'}</div>
+    </div>
+  `;
+  chatMessages.appendChild(messageElement);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-// ==== Rich Message Parsing (Emojis, Markdown, Images) ====
-function parseMessage(text) {
-  // Simple emoji replacement
-  text = text.replace(/:\)/g, '😊').replace(/:D/g, '😃').replace(/:\(/g, '😢');
-  // Markdown: bold
-  text = text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
-  // Markdown: italic
-  text = text.replace(/\*(.*?)\*/g, '<i>$1</i>');
-  // Images
-  text = text.replace(/(https?:\/\/\S+\.(jpg|png|gif))/gi, '<img src="$1" style="max-width:100px;vertical-align:middle;" />');
-  // Links
-  text = text.replace(/(https?:\/\/\S+)/gi, '<a href="$1" target="_blank">$1</a>');
-  return text;
+function parseMessageContent(content) {
+  return content
+    .replace(/:\)/g, '😊')
+    .replace(/:\(/g, '😞')
+    .replace(/http[s]?:\/\/\S+/g, url => `<a href="${url}" target="_blank">${url}</a>`);
 }
 
-// ==== Simulated Multi-User AI Reply ====
-function generateReply() {
-  const bots = [
-    { name: 'Ava', avatar: 'https://api.dicebear.com/7.x/identicon/svg?seed=Ava' },
-    { name: 'Leo', avatar: 'https://api.dicebear.com/7.x/identicon/svg?seed=Leo' },
-    { name: 'Mia', avatar: 'https://api.dicebear.com/7.x/identicon/svg?seed=Mia' }
-  ];
-  const replies = [
-    'Cool! 😎',
-    'Can you explain more?',
-    'I agree! 👍',
-    'Interesting... 🤔',
-    'Let me think...',
-    'Got it.',
-    'Thanks for sharing!',
-    'Check this out: https://perplexity.ai',
-    'Here\'s a cute cat! https://placekitten.com/100/100'
-  ];
-  const bot = bots[Math.floor(Math.random() * bots.length)];
-  return {
-    user: bot.name,
-    type: 'received',
-    text: replies[Math.floor(Math.random() * replies.length)],
-    time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-    avatar: bot.avatar
-  };
+function showNotification(msg) {
+  const notification = document.getElementById('notification');
+  document.getElementById('notification-message').textContent = msg;
+  notification.hidden = false;
+  document.getElementById('notification-close').onclick = () => { notification.hidden = true; };
 }
+
+// Add similar logic for overlays/modal open/close as needed

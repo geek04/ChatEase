@@ -1,27 +1,149 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ChatEase Pro</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/woody180/vanilla-javascript-emoji-picker@main/FGEmojiPicker.css">
 </head>
 <body>
-  <div class="theme-toggle">
-    <button id="toggle-theme">🌙</button>
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h2>Chat Rooms</h2>
+      <div id="online-counter">0 online</div>
+    </div>
+    <div class="chat-list">
+      <div class="chat-item active"><span class="channel-name">General Chat</span></div>
+      <div class="chat-item"><span class="channel-name">Support</span></div>
+    </div>
+    <div class="current-user">
+      <img src="" alt="Avatar" class="user-avatar" id="user-avatar">
+      <span id="username-display"></span>
+    </div>
   </div>
-  <div class="chat-container">
-    <header class="chat-header">
-      <span>ChatEase Pro</span>
-      <span id="user-info"></span>
-    </header>
-    <main class="chat-box" id="chat-box"></main>
-    <div id="typing-indicator"></div>
-    <form id="chat-form" class="chat-form">
-      <input type="text" id="chat-input" placeholder="Type a message..." autocomplete="off" />
-      <button type="submit">Send</button>
+
+  <div class="main-chat">
+    <div class="chat-header">
+      <div class="header-left">
+        <h1 id="current-channel">General Chat</h1>
+        <div class="typing-indicator" id="typing-indicator"></div>
+      </div>
+      <button id="theme-toggle" class="icon-btn">🌙</button>
+    </div>
+
+    <div class="chat-controls">
+      <input type="text" id="search-input" placeholder="Search messages...">
+      <select id="filter-select">
+        <option value="all">All Messages</option>
+        <option value="image">Images</option>
+        <option value="file">Files</option>
+      </select>
+      <select id="sort-select">
+        <option value="newest">Newest First</option>
+        <option value="oldest">Oldest First</option>
+      </select>
+    </div>
+
+    <div class="chat-container">
+      <div class="welcome-screen" id="welcome-screen">
+        <h2>Welcome to ChatEase Pro!</h2>
+        <p>Start chatting by selecting a channel or typing a message below</p>
+        <div class="features-list">
+          <div class="feature">
+            <span>🚀 Real-time messaging</span>
+            <span>📎 File sharing</span>
+            <span>😀 Emoji support</span>
+          </div>
+        </div>
+      </div>
+      <div class="chat-messages" id="chat-messages"></div>
+    </div>
+
+    <div class="message-actions">
+      <button id="archive-btn">Archive</button>
+      <button id="forward-btn">Forward</button>
+      <button id="copy-btn">Copy</button>
+      <button id="delete-btn">Delete</button>
+      <button id="edit-btn">Edit</button>
+    </div>
+
+    <form class="message-input" id="chat-form">
+      <div class="input-controls">
+        <button type="button" id="emoji-btn" class="icon-btn">😀</button>
+        <button type="button" id="file-btn" class="icon-btn">📎</button>
+      </div>
+      <input type="text" id="chat-input" placeholder="Type your message...">
+      <button type="submit" class="send-btn">Send</button>
+      <input type="file" id="file-input" hidden>
     </form>
   </div>
+
+  <!-- Overlays and Modals -->
+  <div class="notification" id="notification" aria-modal="true" role="alertdialog" tabindex="-1" hidden>
+    <p id="notification-message"></p>
+    <button id="notification-close">Close</button>
+  </div>
+  <div class="file-preview" id="file-preview" aria-modal="true" role="dialog" tabindex="-1" hidden>
+    <img id="preview-image" src="" alt="File Preview">
+    <p id="preview-filename"></p>
+    <button id="preview-close">Close</button>
+  </div>
+  <div class="user-settings" id="user-settings" aria-modal="true" role="dialog" tabindex="-1" hidden>
+    <h2>User Settings</h2>
+    <div class="setting">
+      <label for="username">Username:</label>
+      <input type="text" id="username" placeholder="Enter your username">
+    </div>
+    <div class="setting">
+      <label for="avatar">Avatar URL:</label>
+      <input type="text" id="avatar" placeholder="Enter avatar URL">
+    </div>
+    <button id="save-settings">Save</button>
+    <button id="reset-settings">Reset</button>
+  </div>
+  <div class="theme-settings" id="theme-settings" aria-modal="true" role="dialog" tabindex="-1" hidden>
+    <h2>Theme Settings</h2>
+    <div class="setting">
+      <label for="theme-select">Select Theme:</label>
+      <select id="theme-select">
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+      </select>
+    </div>
+    <button id="apply-theme">Apply</button>
+    <button id="reset-theme">Reset</button>
+  </div>
+  <div class="user-list" id="user-list-modal" aria-modal="true" role="dialog" tabindex="-1" hidden>
+    <h2>Online Users</h2>
+    <ul id="user-list"></ul>
+  </div>
+  <div class="message-preview" id="message-preview" aria-modal="true" role="dialog" tabindex="-1" hidden>
+    <p id="preview-text"></p>
+    <button id="preview-close">Close</button>
+  </div>
+  <div class="file-upload" id="file-upload-modal" aria-modal="true" role="dialog" tabindex="-1" hidden>
+    <input type="file" id="file-upload-input" accept="image/*, .pdf, .docx">
+    <button id="upload-btn">Upload</button>
+    <div class="upload-progress" id="upload-progress">
+      <div class="progress-bar" id="progress-bar"></div>      
+      <p id="progress-text">0%</p>
+    </div>
+  </div>
+  <div class="message-options" id="message-options-modal" aria-modal="true" role="dialog" tabindex="-1" hidden>
+    <button id="reply-btn">Reply</button>
+    <button id="quote-btn">Quote</button>
+    <button id="react-btn">React</button>
+    <button id="pin-btn">Pin</button>
+    <button id="mute-btn">Mute</button>
+    <button id="block-btn">Block</button>
+    <button id="report-btn">Report</button>
+    <button id="unblock-btn">Unblock</button>
+    <button id="unmute-btn">Unmute</button>
+  </div>
+  <!-- Only use the third-party emoji picker, not a custom one -->
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/woody180/vanilla-javascript-emoji-picker@main/FGEmojiPicker.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
