@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ChatEase Pro</title>
   <link rel="stylesheet" href="style.css">
-  <!-- No emoji-picker element or script here! -->
 </head>
 <body>
   <div class="sidebar">
@@ -58,28 +57,33 @@
         </div>
       </div>
       <div class="chat-messages" id="chat-messages"></div>
+      <form class="message-input" id="chat-form" autocomplete="off">
+        <div class="input-controls">
+          <button type="button" id="emoji-btn" class="icon-btn">😀</button>
+          <button type="button" id="file-btn" class="icon-btn">📎</button>
+        </div>
+        <input type="text" id="chat-input" placeholder="Type your message...">
+        <button type="submit" class="send-btn">Send</button>
+        <input type="file" id="file-input" hidden>
+      </form>
     </div>
-
-    <div class="message-actions">
-      <button id="archive-btn">Archive</button>
-      <button id="forward-btn">Forward</button>
-      <button id="copy-btn">Copy</button>
-      <button id="delete-btn">Delete</button>
-      <button id="edit-btn">Edit</button>
-    </div>
-
-    <form class="message-input" id="chat-form">
-      <div class="input-controls">
-        <button type="button" id="emoji-btn" class="icon-btn">😀</button>
-        <button type="button" id="file-btn" class="icon-btn">📎</button>
-      </div>
-      <input type="text" id="chat-input" placeholder="Type your message...">
-      <button type="submit" class="send-btn">Send</button>
-      <input type="file" id="file-input" hidden>
-    </form>
   </div>
 
-  <!-- Overlays and Modals (unchanged) -->
+  <!-- Context menu for message actions -->
+  <div id="message-context-menu" class="context-menu" style="display:none; position:absolute; z-index:9999;">
+    <ul>
+      <li id="context-archive">Archive</li>
+      <li id="context-forward">Forward</li>
+      <li id="context-copy">Copy</li>
+      <li id="context-delete">Delete</li>
+      <li id="context-edit">Edit</li>
+    </ul>
+  </div>
+
+  <!-- Emoji picker element -->
+  <emoji-picker id="emoji-picker" style="display:none; position:absolute; z-index:9999;"></emoji-picker>
+
+  <!-- Overlays and Modals (unchanged, for notifications, settings, etc.) -->
   <div class="notification" id="notification" aria-modal="true" role="alertdialog" tabindex="-1" hidden>
     <p id="notification-message"></p>
     <button id="notification-close">Close</button>
@@ -141,20 +145,6 @@
     <button id="unblock-btn">Unblock</button>
     <button id="unmute-btn">Unmute</button>
   </div>
-  <!-- Custom context menu for messages -->
-<div id="message-context-menu" class="context-menu" style="display:none; position:absolute; z-index:9999;">
-  <ul>
-    <li id="context-archive">Archive</li>
-    <li id="context-forward">Forward</li>
-    <li id="context-copy">Copy</li>
-    <li id="context-delete">Delete</li>
-    <li id="context-edit">Edit</li>
-  </ul>
-</div>
-
-
-  <!-- Place the emoji-picker element here, just before scripts -->
-  <emoji-picker id="emoji-picker" style="display:none; position:absolute; z-index:9999;"></emoji-picker>
 
   <!-- Scripts at the end of body, correct order, no duplicates -->
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
