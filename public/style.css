@@ -586,6 +586,19 @@ body.dark-mode {
     margin-top: 1em;
   }
 }
+.chat-messages {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  max-height: 50vh; /* or adjust as needed for your layout */
+  min-height: 120px;
+  padding-bottom: 1em;
+}
+@media (max-width: 700px) {
+  .chat-messages {
+    max-height: 40vh;
+    min-height: 100px;
+  }
+}
 
 
 
