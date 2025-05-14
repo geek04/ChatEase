@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   // Socket.IO setup
-  const socket = io();
+  const socket = io("https://chatease-lodz.onrender.com");
   const chatForm = document.getElementById("chat-form");
   const chatMessages = document.getElementById("chat-messages");
   const typingIndicator = document.getElementById("typing-indicator");
