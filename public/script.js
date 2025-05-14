@@ -53,9 +53,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
   emojiBtn.addEventListener("click", (e) => {
     const rect = emojiBtn.getBoundingClientRect();
+    const pickerHeight = 350; // px, adjust if your picker is taller/shorter
+    let top = rect.top - pickerHeight;
+    if (top < 0) top = rect.bottom; // fallback if not enough space above
     emojiPicker.style.display = "block";
     emojiPicker.style.left = rect.left + "px";
-    emojiPicker.style.top = rect.bottom + "px";
+    emojiPicker.style.top = top + "px";
   });
 
   emojiPicker.addEventListener("emoji-click", event => {
