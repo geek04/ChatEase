@@ -518,23 +518,41 @@ body.dark-mode {
 @media (max-width: 700px) {
   body {
     flex-direction: column;
+    height: auto;
   }
   .sidebar {
     width: 100%;
     max-width: none;
     min-height: auto;
     flex-direction: row;
+    align-items: center;
     padding: 0.5em 0;
+    justify-content: space-between;
+  }
+  .sidebar-header, .chat-list, .current-user {
+    padding: 0.5em;
+    text-align: left;
+    border: none;
   }
   .main-chat {
     margin: 0;
     border-radius: 0;
+    width: 100vw;
+    min-width: 0;
   }
   .chat-header,
   .chat-controls,
   .chat-container,
   .message-input {
     padding: 0.5em 1em;
+  }
+  .chat-header h1 {
+    font-size: 1.2em;
+  }
+  .features-list {
+    flex-direction: column;
+    gap: 0.5em;
+    font-size: 1em;
   }
   .user-avatar {
     width: 32px;
@@ -543,6 +561,7 @@ body.dark-mode {
   .chat-messages {
     max-height: 40vh;
     padding: 0.5em 0.5em 2em 0.5em;
+    overflow-y: auto;
   }
   .message {
     font-size: 1em;
@@ -550,7 +569,24 @@ body.dark-mode {
     max-width: 95vw;
     word-break: break-word;
   }
+  .message-actions {
+    flex-wrap: wrap;
+    gap: 0.5em;
+    justify-content: center;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #fff;
+    z-index: 100;
+    border-top: 1px solid #eee;
+  }
+  .welcome-screen {
+    font-size: 1em;
+    margin-top: 1em;
+  }
 }
+
 
 
 
